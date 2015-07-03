@@ -3,3 +3,4 @@ flask-sqlalchemy
 elasticsearch
 elasticsearch-dsl
 PyMySQL
+pypinyin
