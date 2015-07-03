@@ -5,7 +5,8 @@
 Clone it as git submodule:
 
 ```sh
-$ git submodule add https://github.com/dianchang/dianchang-models models
+$ git submodule add git@github.com:dianchang/dianchang-models.git models
+$ pip install -r models/requirements.txt
 ```
 
 Then:
