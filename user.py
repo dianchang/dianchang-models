@@ -101,7 +101,7 @@ class User(db.Model):
     def followed_by_user(self, user_id):
         """该用户是否被当前用户关注"""
         return FollowUser.query.filter(FollowUser.follower_id == user_id,
-                                       FollowUser.following_id == user_id).count() > 0
+                                       FollowUser.following_id == self.id).count() > 0
 
     def blocked_by_user(self, user_id):
         """该用户是否被当前用户屏蔽"""
