@@ -13,7 +13,7 @@ class Topic(db.Model):
     name_pinyin = db.Column(db.String(100))
     wiki = db.Column(db.Text(4294967295))
     wiki_preview = db.Column(db.Text)
-    avatar = db.Column(db.String(200), default='default.png')
+    avatar = db.Column(db.String(200), default='default_topic_avatar.png')
     clicks = db.Column(db.Integer, default=0)
     root = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now)

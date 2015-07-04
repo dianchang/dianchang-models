@@ -16,7 +16,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True)
     inactive_email = db.Column(db.String(100))
     desc = db.Column(db.String(200), )
-    avatar = db.Column(db.String(200), default='default.png')
+    avatar = db.Column(db.String(200), default='default_user_avatar.png')
     background = db.Column(db.String(200))
     password = db.Column(db.String(200))
     url_token = db.Column(db.String(100))
