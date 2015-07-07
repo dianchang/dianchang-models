@@ -43,6 +43,9 @@ class Answer(db.Model):
             if len(pure_content) > 100:
                 content_preview = pure_content[:100].rstrip('.') + "..."
                 content_preview_truncated = True
+            elif len(pure_content) == 0 and 'img' in value:
+                content_preview = '[图片]'
+                content_preview_truncated = True
             else:
                 content_preview = pure_content
                 content_preview_truncated = False
