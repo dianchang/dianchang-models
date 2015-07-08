@@ -33,7 +33,8 @@ class User(db.Model):
 
     is_active = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
-    has_seleted_expert_topics = db.Column(db.Boolean, default=False)
+    has_selected_expert_topics = db.Column(db.Boolean, default=False)  # 是否选择了擅长话题
+    has_selected_interesting_topics = db.Column(db.Boolean, default=False)  # 是否选择了感兴趣的话题
 
     # 计数
     followers_count = db.Column(db.Integer, default=0)
@@ -142,7 +143,7 @@ class User(db.Model):
         """
         from .topic import UserTopicStatistic
 
-        if self.has_seleted_expert_topics:
+        if self.has_selected_expert_topics:
             return UserTopicStatistic.query. \
                 filter(UserTopicStatistic.user_id == self.id,
                        UserTopicStatistic.selected). \
