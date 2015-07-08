@@ -357,6 +357,26 @@ class FollowTopic(db.Model):
         return '<FollowQuestion %s>' % self.id
 
 
+class WorkOnProduct(db.Model):
+    """工作过的产品"""
+    __bind_key__ = 'dc'
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
+    topic = db.relationship('Topic', backref=db.backref('workers',
+                                                        lazy='dynamic',
+                                                        order_by='desc(WorkOnProduct.created_at)'))
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.relationship('User', backref=db.backref('worked_on_products',
+                                                      lazy='dynamic',
+                                                      order_by='desc(WorkOnProduct.created_at)'))
+
+    def __repr__(self):
+        return '<WorkOnProduct %s>' % self.id
+
+
 class TopicWikiContributor(db.Model):
     """话题Wiki贡献者"""
     __bind_key__ = 'dc'
