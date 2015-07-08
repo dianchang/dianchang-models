@@ -361,6 +361,7 @@ class WorkOnProduct(db.Model):
     """工作过的产品"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
+    current = db.Column(db.Boolean, default=False)  # 是否当前在职
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
@@ -369,7 +370,7 @@ class WorkOnProduct(db.Model):
                                                         order_by='desc(WorkOnProduct.created_at)'))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref=db.backref('worked_on_products',
+    user = db.relationship('User', backref=db.backref('products_worked_on',
                                                       lazy='dynamic',
                                                       order_by='desc(WorkOnProduct.created_at)'))
 
