@@ -150,9 +150,10 @@ class User(db.Model):
                 order_by(UserTopicStatistic.show_order.asc()).limit(8)
         else:
             return UserTopicStatistic.query. \
-                filter(UserTopicStatistic.user_id == self.id,
-                       UserTopicStatistic.score != 0). \
-                order_by(UserTopicStatistic.score.asc()).limit(7)
+                filter(UserTopicStatistic.user_id == self.id). \
+                filter(db.or_(UserTopicStatistic.score != 0, UserTopicStatistic.worked_on)). \
+                order_by(UserTopicStatistic.worked_on.desc()).order_by(UserTopicStatistic.score.asc()). \
+                limit(7)
 
     def answered_topics(self, count=3):
         """该用户回答过的话题"""

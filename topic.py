@@ -372,7 +372,7 @@ class WorkOnProduct(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship('User', backref=db.backref('products_worked_on',
                                                       lazy='dynamic',
-                                                      order_by='desc(WorkOnProduct.created_at)'))
+                                                      order_by='asc(WorkOnProduct.created_at)'))
 
     def __repr__(self):
         return '<WorkOnProduct %s>' % self.id
@@ -408,6 +408,7 @@ class UserTopicStatistic(db.Model):
     upvotes_count = db.Column(db.Integer, default=0)  # 用户在该话题下收获的赞同数
     score = db.Column(db.Integer, default=0)  # 用户对该话题的擅长度
     selected = db.Column(db.Boolean, default=False)  # 是否选择该话题作为擅长话题
+    worked_on = db.Column(db.Boolean, default=False)  # 是否曾经工作过
     show_order = db.Column(db.Integer, default=0)  # 擅长话题排列顺序（越大越排在后面）
     experience = db.Column(db.String(200))  # 话题经验
     week_answers_count = db.Column(db.String(200))  # 近7天的回答数，以数组的 json 形式存入，例如：[1,2,3,4,5,6,7]，越往左天数越早
