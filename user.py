@@ -426,6 +426,23 @@ class HomeFeed(db.Model):
     answer = db.relationship('Answer')
 
 
+class HomeFeedForNewUser(db.Model):
+    """用于在新用户注册后，为其显示首页feed"""
+    __bind_key__ = 'dc'
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    sender = db.relationship('User', foreign_keys=[sender_id])
+
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
+    question = db.relationship('Question')
+
+    answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'))
+    answer = db.relationship('Answer')
+
+
 class COMPOSE_FEED_KIND(object):
     """撰写feed类型"""
     INVITE_TO_ANSWER = "kdcKRfi"  # 别人邀请我回答的问题
