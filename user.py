@@ -36,6 +36,10 @@ class User(db.Model):
     has_selected_expert_topics = db.Column(db.Boolean, default=False)  # 是否选择了擅长话题
     has_selected_interesting_topics = db.Column(db.Boolean, default=False)  # 是否选择了感兴趣的话题
 
+    # 引导
+    has_finish_guide_steps = db.Column(db.Boolean, default=False)  # 是否完成引导步骤
+    current_guide_step = db.Column(db.Integer, default=1)  # 当前处于的引导步骤
+
     # 计数
     followers_count = db.Column(db.Integer, default=0)
     followings_count = db.Column(db.Integer, default=0)
