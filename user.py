@@ -426,8 +426,8 @@ class HomeFeed(db.Model):
     answer = db.relationship('Answer')
 
 
-class HomeFeedForNewUser(db.Model):
-    """用于在新用户注册后，为其显示首页feed"""
+class HomeFeedBackup(db.Model):
+    """首页 FEED 备份，用于当新用户注册并关注用户后，为其首页 FEED 填充内容"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
     kind = db.Column(db.String(50))
