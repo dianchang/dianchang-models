@@ -170,7 +170,8 @@ class Topic(db.Model):
         """该话题下的所有问题（包括子话题的问题）"""
         from .question import QuestionTopic, Question
 
-        topics_id_list = self.descendant_topics_id_list
+        # topics_id_list = self.descendant_topics_id_list
+        topics_id_list = self.child_topics_id_list
         topics_id_list.append(self.id)
         return Question.query.filter(Question.topics.any(QuestionTopic.topic_id.in_(
             topics_id_list))).order_by(Question.created_at.desc())
@@ -181,7 +182,8 @@ class Topic(db.Model):
         from .answer import Answer
         from .question import Question, QuestionTopic
 
-        topics_id_list = self.descendant_topics_id_list
+        # topics_id_list = self.descendant_topics_id_list
+        topics_id_list = self.child_topics_id_list
         topics_id_list.append(self.id)
         return Answer.query.filter(Answer.question.has(Question.topics.any(
             QuestionTopic.topic_id.in_(topics_id_list))))
@@ -284,6 +286,14 @@ class Topic(db.Model):
                                                     TopicClosure.descendant_id == descendant_topic.descendant_id)
                 map(db.session.delete, closure)
         db.session.commit()
+
+    @staticmethod
+    def find_min_path(topic_id_a, topic_id_b):
+        """寻找话题之间的最短路径"""
+        path = db.session.query(db.func.min(TopicClosure.path_length).label("min_path")).filter(db.or_(
+            db.and_(TopicClosure.ancestor_id == topic_id_a, TopicClosure.descendant_id == topic_id_b),
+            db.and_(TopicClosure.descendant_id == topic_id_a, TopicClosure.ancestor_id == topic_id_b))).first()
+        return path.min_path
 
     @staticmethod
     def find_all_paths(graph, start, end, path=[]):

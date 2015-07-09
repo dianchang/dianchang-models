@@ -76,7 +76,7 @@ class Question(db.Model):
 
     @property
     def relevant_questions(self):
-        """在elasticsearch中查询相关话题"""
+        """相关话题"""
         results = search_objects_from_es(doc_type='question', body={
             "query": {
                 "match": {
@@ -101,6 +101,19 @@ class Question(db.Model):
             result_questions.append(question)
 
         return result_questions
+
+    def most_relevant_topic(self, topic_id):
+        """寻找该问题来自某话题下的哪个话题"""
+        from . import Topic
+
+        min_path = 10000  # A big number
+        most_relevant_topic_id = 0
+        for topic in self.topics:
+            path = Topic.find_min_path(topic_id, topic.topic_id)
+            if path is not None and path <= min_path:
+                min_path = path
+                most_relevant_topic_id = topic.topic_id
+        return Topic.query.get_or_404(most_relevant_topic_id)
 
     def followed_by_user(self, user_id):
         """该问题是否被用户关注"""
