@@ -16,7 +16,7 @@ class Topic(db.Model):
     avatar = db.Column(db.String(200), default='default_topic_avatar.png')
     clicks = db.Column(db.Integer, default=0)
     root = db.Column(db.Boolean, default=False)
-    kind = db.Column(db.Boolean)  # 类型 1：产品，2：组织，3：职业，4：技能，5：人名，6：其他
+    kind = db.Column(db.Integer)  # 类型 1：产品，2：组织，3：职业，4：技能，5：人名，6：其他
     other_kind = db.Column(db.String(100))  # 其他类型
     created_at = db.Column(db.DateTime, default=datetime.now)
 
