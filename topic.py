@@ -20,10 +20,10 @@ class Topic(db.Model):
     other_kind = db.Column(db.String(100))  # 其他类型
     created_at = db.Column(db.DateTime, default=datetime.now)
 
-    locked = db.Column(db.Boolean, default=False)  # 全部锁定
+    all_locked = db.Column(db.Boolean, default=False)  # 全部锁定
     name_locked = db.Column(db.Boolean, default=False)  # 锁定名称
-    wiki_locked = db.Column(db.Boolean, default=False)  # 锁定百科
     avatar_locked = db.Column(db.Boolean, default=False)  # 锁定图片
+    wiki_locked = db.Column(db.Boolean, default=False)  # 锁定百科
     parent_topics_locked = db.Column(db.Boolean, default=False)  # 锁定所属话题
     child_topics_locked = db.Column(db.Boolean, default=False)  # 锁定下属话题
     merge_topic_locked = db.Column(db.Boolean, default=False)  # 锁定合并话题
