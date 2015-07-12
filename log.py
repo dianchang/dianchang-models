@@ -22,6 +22,9 @@ class TOPIC_EDIT_KIND(object):
     REMOVE_CHILD_TOPIC = "tCsTnWa"
     ADD_SYNONYM = "E9Ob9il"
     REMOVE_SYNONYM = "hWv1VIC"
+    UPDATE_KIND = "eQMPaY1"
+    LOCK = "x8LVZ7O"
+    UNLOCK = "7KMVXrw"
 
 
 class PublicEditLog(db.Model):

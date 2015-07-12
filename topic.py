@@ -105,7 +105,7 @@ class Topic(db.Model):
         return delete_object_from_es('topic', self.id)
 
     @staticmethod
-    def query_from_es(q, page=1, per_page=10):
+    def query_from_es(q, page=1, per_page=10, only_id_list=False):
         """在elasticsearch中查询话题"""
         results = search_objects_from_es(doc_type='topic', body={
             "query": {
@@ -124,6 +124,12 @@ class Topic(db.Model):
         })
 
         result_topics = []
+
+        if only_id_list:
+            for result in results["hits"]["hits"]:
+                id = result["_id"]
+                result_topics.append(id)
+            return result_topics
 
         for result in results["hits"]["hits"]:
             id = result["_id"]
