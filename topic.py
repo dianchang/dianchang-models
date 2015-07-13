@@ -35,7 +35,7 @@ class Topic(db.Model):
 
     # 合并至话题
     merge_to_topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
-    merge_to_topic = db.relationship('Topic', remote_side=[merge_to_topic_id])
+    merge_to_topic = db.relationship('Topic', remote_side=[id])
 
     def __setattr__(self, name, value):
         """为name赋值时，自动设置其拼音"""
