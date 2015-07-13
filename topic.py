@@ -9,7 +9,7 @@ class Topic(db.Model):
     """话题"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
+    name = db.Column(db.String(100), unique=True)
     name_pinyin = db.Column(db.String(100))
     wiki = db.Column(db.Text(4294967295))
     wiki_preview = db.Column(db.Text)
