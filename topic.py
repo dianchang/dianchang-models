@@ -33,6 +33,10 @@ class Topic(db.Model):
     questions_count = db.Column(db.Integer, default=0)  # 问题数量
     all_questions_count = db.Column(db.Integer, default=0)  # 问题数量（包含子话题下的问题）
 
+    # 合并至话题
+    merge_to_topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
+    merge_to_topic = db.relationship('Topic', remote_side=[merge_to_topic_id])
+
     def __setattr__(self, name, value):
         """为name赋值时，自动设置其拼音"""
         if name == 'name':
@@ -273,7 +277,7 @@ class Topic(db.Model):
                 map(db.session.delete, closure)
         db.session.commit()
 
-    def add_child_topic(self, child_topic_id):
+    def add_child_topic(self, child_topic_id, from_merge=False):
         """添加直接子话题"""
         for ancestor_topic in TopicClosure.query.filter(TopicClosure.descendant_id == self.id):
             for descendant_topic in TopicClosure.query.filter(TopicClosure.ancestor_id == child_topic_id):
@@ -283,16 +287,19 @@ class Topic(db.Model):
                 if not closure:
                     new_closure = TopicClosure(ancestor_id=ancestor_topic.ancestor_id,
                                                descendant_id=descendant_topic.descendant_id,
-                                               path_length=ancestor_topic.path_length + descendant_topic.path_length + 1)
+                                               path_length=ancestor_topic.path_length + descendant_topic.path_length + 1,
+                                               from_merge=from_merge)
                     db.session.add(new_closure)
         db.session.commit()
 
-    def remove_child_topic(self, child_topic_id):
+    def remove_child_topic(self, child_topic_id, from_merge=False):
         """删除直接子话题"""
         for ancestor_topic in TopicClosure.query.filter(TopicClosure.descendant_id == self.id):
             for descendant_topic in TopicClosure.query.filter(TopicClosure.ancestor_id == child_topic_id):
                 closure = TopicClosure.query.filter(TopicClosure.ancestor_id == ancestor_topic.ancestor_id,
                                                     TopicClosure.descendant_id == descendant_topic.descendant_id)
+                if from_merge:
+                    closure = closure.filter(TopicClosure.from_merge)
                 map(db.session.delete, closure)
         db.session.commit()
 
@@ -328,6 +335,7 @@ class TopicClosure(db.Model):
     """话题的closure table"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
+    from_merge = db.Column(db.Boolean, default=False)
     ancestor_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
     descendant_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
     path_length = db.Column(db.Integer)
@@ -340,6 +348,7 @@ class TopicSynonym(db.Model):
     """话题同义词"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
+    from_merge = db.Column(db.Boolean, default=False)
     synonym = db.Column(db.String(200))
     synonym_pinyin = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.now)
@@ -360,6 +369,7 @@ class FollowTopic(db.Model):
     """关注话题"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
+    from_merge = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))

@@ -135,6 +135,7 @@ class QuestionTopic(db.Model):
     """问题所属的话题"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
+    from_merge = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
