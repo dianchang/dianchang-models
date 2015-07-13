@@ -146,7 +146,7 @@ class Topic(db.Model):
         return result_topics, results["hits"]["total"], results['took']
 
     @staticmethod
-    def get_by_name(name, user_id, create_if_not_exist=False):
+    def get_by_name(name, user_id=None, create_if_not_exist=False):
         """通过name获取句集"""
         from .log import PublicEditLog, TOPIC_EDIT_KIND
 
