@@ -546,13 +546,14 @@ class RelevantTopic(db.Model):
     """相关话题"""
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
+    score = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
     topic = db.relationship('Topic',
                             backref=db.backref('relevant_topics',
                                                lazy='dynamic',
-                                               order_by='desc(RelevantTopic.created_at)'),
+                                               order_by='desc(RelevantTopic.score)'),
                             foreign_keys=[topic_id])
 
     relevant_topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
