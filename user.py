@@ -462,6 +462,7 @@ class ComposeFeed(db.Model):
     kind = db.Column(db.String(50))
     ignore = db.Column(db.Boolean, default=False)  # 忽略
     answered = db.Column(db.Boolean, default=False)
+    unread = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
