@@ -117,9 +117,9 @@ class User(db.Model):
     def profile_url(self):
         """用户个人主页url"""
         if self.url_token:
-            return '%s/people/%s' % (db.config.get('SITE_DOMAIN'), self.url_token)
+            return '%s/people/%s' % (db.config.get('DC_DOMAIN'), self.url_token)
         else:
-            return '%s/people/%d' % (db.config.get('SITE_DOMAIN'), self.id)
+            return '%s/people/%d' % (db.config.get('DC_DOMAIN'), self.id)
 
     @property
     def avatar_url(self):
