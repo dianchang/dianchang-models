@@ -166,19 +166,20 @@ class Topic(db.Model):
                 topic = Topic(name=name)
                 db.session.add(topic)
                 db.session.commit()
-                topic.save_to_es()  # save to elasticsearch
-                topic.add_parent_topic(DEFAULT_PARENT_TOPIC_ID)
+
+                # Add topic closure
+                topic_closure = TopicClosure(ancestor_id=topic.id, descendant_id=topic.id, path_length=0)
+                db.session.add(topic_closure)
 
                 # Create topic log
                 log = PublicEditLog(kind=TOPIC_EDIT_KIND.CREATE, user_id=user_id, after=name, after_id=topic.id,
                                     original_name=topic.name)
                 topic.logs.append(log)
                 db.session.add(topic)
-
-                # Add topic closure
-                topic_closure = TopicClosure(ancestor_id=topic.id, descendant_id=topic.id, path_length=0)
-                db.session.add(topic_closure)
                 db.session.commit()
+
+                topic.save_to_es()  # save to elasticsearch
+                topic.add_parent_topic(DEFAULT_PARENT_TOPIC_ID)
             return topic
         else:
             return None
