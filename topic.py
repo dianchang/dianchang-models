@@ -29,6 +29,11 @@ class Topic(db.Model):
     merge_topic_locked = db.Column(db.Boolean, default=False)  # 锁定合并话题
     topic_kind_locked = db.Column(db.Boolean, default=False)  # 锁定话题类型
 
+    # 用于话题热度计算
+    avg = db.Column(db.Float, default=0)  # 均值
+    sqrt_avg = db.Column(db.Float, default=0)  # 平方和均值
+    hot_score = db.Column(db.Float, default=0)  # 热度
+
     followers_count = db.Column(db.Integer, default=0)
     questions_count = db.Column(db.Integer, default=0)  # 问题数量
     all_questions_count = db.Column(db.Integer, default=0)  # 问题数量（包含子话题下的问题）
