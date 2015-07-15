@@ -33,6 +33,7 @@ class Topic(db.Model):
     avg = db.Column(db.Float, default=0)  # 均值
     sqrt_avg = db.Column(db.Float, default=0)  # 平方和均值
     hot_score = db.Column(db.Float, default=0)  # 热度
+    hide_from_hot = db.Column(db.Boolean, default=0)  # 不在热议话题中显示
 
     followers_count = db.Column(db.Integer, default=0)
     questions_count = db.Column(db.Integer, default=0)  # 问题数量
