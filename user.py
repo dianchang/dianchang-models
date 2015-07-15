@@ -423,6 +423,9 @@ class HomeFeed(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     sender = db.relationship('User', foreign_keys=[sender_id])
 
+    topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
+    topic = db.relationship('Topic')
+
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
     question = db.relationship('Question')
 
@@ -439,6 +442,9 @@ class HomeFeedBackup(db.Model):
 
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     sender = db.relationship('User', foreign_keys=[sender_id])
+
+    topic_id = db.Column(db.Integer, db.ForeignKey('topic.id'))
+    topic = db.relationship('Topic')
 
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
     question = db.relationship('Question')

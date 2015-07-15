@@ -16,15 +16,26 @@ class TOPIC_EDIT_KIND(object):
     UPDATE_AVATAR = "Z0YVIUM"
     UPDATE_NAME = "4Rhuxhl"
     UPDATE_WIKI = "dw8xA42"
+
+    ADD_SYNONYM = "E9Ob9il"
+    REMOVE_SYNONYM = "hWv1VIC"
+    UPDATE_KIND = "eQMPaY1"
+
+    # 添加、移除话题
     ADD_PARENT_TOPIC = "vim7OUT"
     REMOVE_PARENT_TOPIC = "fC3fNIl"
     ADD_CHILD_TOPIC = "D0qZIv7"
     REMOVE_CHILD_TOPIC = "tCsTnWa"
-    ADD_SYNONYM = "E9Ob9il"
-    REMOVE_SYNONYM = "hWv1VIC"
-    UPDATE_KIND = "eQMPaY1"
+
+    # 锁定
     LOCK = "x8LVZ7O"
     UNLOCK = "7KMVXrw"
+
+    # 合并
+    MERGE_TO = "4ALmnJV"  # 该话题被合并到其他话题
+    UNMERGE_FROM = "UmS4Pog"  # 取消合并该话题到其他话题
+    MERGE_IN = "3Kz6CJY"  # 某话题合并至本话题
+    UNMERGE_OUT = "ake3qbh"  # 某话题取消合并至本话题
 
 
 class PublicEditLog(db.Model):
