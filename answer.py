@@ -12,7 +12,8 @@ class Answer(db.Model):
     content_preview = db.Column(db.Text)
     content_preview_truncated = db.Column(db.Boolean, default=False)  # content_preview是否被截断
     content_preview_length = db.Column(db.Integer, default=0)
-    score = db.Column(db.Integer, default=0)
+    fantastic = db.Column(db.Boolean, default=False)  # 精彩回答
+    score = db.Column(db.Integer, default=0)  # 对该回答的评分
     hide = db.Column(db.Boolean, default=False)
     anonymous = db.Column(db.Boolean, default=False)  # 匿名
     identity = db.Column(db.String(200))  # 显示身份

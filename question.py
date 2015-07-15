@@ -12,6 +12,7 @@ class Question(db.Model):
     desc = db.Column(db.Text)
     clicks = db.Column(db.Integer, default=0)
     anonymous = db.Column(db.Boolean, default=False)  # 匿名提问
+    hot = db.Column(db.Boolean, default=False)  # 热门问题
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     answers_count = db.Column(db.Integer, default=0)
