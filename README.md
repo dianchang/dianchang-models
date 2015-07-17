@@ -19,8 +19,17 @@ init_models(app)
 
 `app` should has `DC_DOMAIN`, `ROOT_TOPIC_ID`, `DEFAULT_PARENT_TOPIC_ID`, `ELASTICSEARCH_HOST` and `ELASTICSEARCH_HOSTS` configs in addition to SQLAlchemy configs.
 
-##Pull codes
+##Pull latest codes
 
 ```
-$ git pull --recurse-submodules
+$ git submodule foreach git checkout master
+$ git submodule foreach git pull origin master
 ```
+
+##Clone
+
+```
+$ git clone xxx.git --recursive
+```
+
+If you already cloned but forgot --recursive, you can also fetch submodules with `git submodule update --init`.
