@@ -19,6 +19,7 @@ class Topic(db.Model):
     kind = db.Column(db.Integer)  # 类型 1：产品，2：组织，3：职业，4：技能，5：人名，6：其他
     other_kind = db.Column(db.String(100))  # 其他类型
     created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now)  # 该话题下有新问题或新回答时，更新此字段
 
     all_locked = db.Column(db.Boolean, default=False)  # 全部锁定
     name_locked = db.Column(db.Boolean, default=False)  # 锁定名称
