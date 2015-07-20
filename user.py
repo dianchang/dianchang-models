@@ -122,6 +122,22 @@ class User(db.Model):
             return '%s/people/%d' % (db.config.get('DC_DOMAIN'), self.id)
 
     @property
+    def qa_url(self):
+        """用户问答url"""
+        if self.url_token:
+            return '%s/people/%s/qa' % (db.config.get('DC_DOMAIN'), self.url_token)
+        else:
+            return '%s/people/%d/qa' % (db.config.get('DC_DOMAIN'), self.id)
+
+    @property
+    def achievements_url(self):
+        """用户成就url"""
+        if self.url_token:
+            return '%s/people/%s/achievements' % (db.config.get('DC_DOMAIN'), self.url_token)
+        else:
+            return '%s/people/%d/achievements' % (db.config.get('DC_DOMAIN'), self.id)
+
+    @property
     def avatar_url(self):
         """用户头像"""
         return "%s/%s?imageView2/1/w/240" % (db.config.get('CDN_HOST'), self.avatar)
