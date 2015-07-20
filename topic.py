@@ -50,7 +50,7 @@ class Topic(db.Model):
         if name == 'wiki':
             pure_content = get_pure_content(value)
             if len(pure_content) > 100:
-                wiki_preview = pure_content[:100].rstrip('.') + "..."
+                wiki_preview = pure_content[:100].rstrip('.')
             else:
                 wiki_preview = pure_content
             super(Topic, self).__setattr__('wiki_preview', wiki_preview)
