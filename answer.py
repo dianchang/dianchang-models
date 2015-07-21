@@ -18,6 +18,7 @@ class Answer(db.Model):
     anonymous = db.Column(db.Boolean, default=False)  # 匿名
     identity = db.Column(db.String(200))  # 显示身份
     topic_experience = db.Column(db.String(100))  # 用户在回答时采用的话题经验
+    qrcode = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     comments_count = db.Column(db.Integer, default=0)
@@ -86,6 +87,11 @@ class Answer(db.Model):
     def delete_from_es(self):
         """从elasticsearch中删除此回答"""
         return delete_object_from_es('answer', self.id)
+
+    @property
+    def qrcode_url(self):
+        """二维码图片地址"""
+        return "%s/%s" % (db.config.get('CDN_HOST'), self.qrcode)
 
     @property
     def root_comments(self):
