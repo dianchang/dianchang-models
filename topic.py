@@ -156,7 +156,7 @@ class Topic(db.Model):
         """通过name获取句集"""
         from .log import PublicEditLog, TOPIC_EDIT_KIND
 
-        DEFAULT_PARENT_TOPIC_ID = db.config.get('DEFAULT_PARENT_TOPIC_ID')
+        NC_TOPIC_ID = db.config.get('NC_TOPIC_ID')
 
         name = name or ""
         name = name.strip()
@@ -180,7 +180,7 @@ class Topic(db.Model):
                 db.session.commit()
 
                 topic.save_to_es()  # save to elasticsearch
-                topic.add_parent_topic(DEFAULT_PARENT_TOPIC_ID)
+                topic.add_parent_topic(NC_TOPIC_ID)
             return topic
         else:
             return None

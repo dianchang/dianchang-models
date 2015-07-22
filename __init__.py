@@ -14,7 +14,13 @@ def init_models(app):
         'DC_DOMAIN': app.config.get('DC_DOMAIN'),
         'CDN_HOST': app.config.get('CDN_HOST'),
         'ROOT_TOPIC_ID': app.config.get('ROOT_TOPIC_ID'),
-        'DEFAULT_PARENT_TOPIC_ID': app.config.get('DEFAULT_PARENT_TOPIC_ID')
+        'PRODUCT_TOPIC_ID': app.config.get('PRODUCT_TOPIC_ID'),
+        'ORGANIZATION_TOPIC_ID': app.config.get('ORGANIZATION_TOPIC_ID'),
+        'POSITION_TOPIC_ID': app.config.get('POSITION_TOPIC_ID'),
+        'SKILL_TOPIC_ID': app.config.get('SKILL_TOPIC_ID'),
+        'PEOPLE_TOPIC_ID': app.config.get('PEOPLE_TOPIC_ID'),
+        'OTHER_TOPIC_ID': app.config.get('OTHER_TOPIC_ID'),
+        'NC_TOPIC_ID': app.config.get('NC_TOPIC_ID')
     }
 
     init_es(app.config.get('ELASTICSEARCH_HOSTS'))
