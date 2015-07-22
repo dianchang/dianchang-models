@@ -77,7 +77,7 @@ class Topic(db.Model):
 
     @property
     def ancestor_paths(self):
-        """寻找跟话题到该话题之间的所有路径"""
+        """寻找根话题到该话题之间的所有路径"""
         ROOT_TOPIC_ID = db.config.get('ROOT_TOPIC_ID')
         ancestor_topics_id_list = self.ancestor_topics_id_list[:]
         all_list = ancestor_topics_id_list[:]
@@ -269,6 +269,18 @@ class Topic(db.Model):
     def descendant_topics(self):
         """子孙话题"""
         return Topic.query.filter(Topic.id.in_(self.descendant_topics_id_list))
+
+    @staticmethod
+    def other_topics():
+        """其他话题，包括 人、其他、未分类 话题下的所有子话题"""
+        NC_TOPIC_ID = db.config.get('NC_TOPIC_ID')
+        OTHER_TOPIC_ID = db.config.get('OTHER_TOPIC_ID')
+        PEOPLE_TOPIC_ID = db.config.get('PEOPLE_TOPIC_ID')
+        descendant_topics = db.session.query(TopicClosure.descendant_id). \
+            filter(TopicClosure.ancestor_id.in_([NC_TOPIC_ID, OTHER_TOPIC_ID, PEOPLE_TOPIC_ID]),
+                   TopicClosure.descendant_id != TopicClosure.ancestor_id).all()
+        descendant_topics_id_list = [item.descendant_id for item in descendant_topics]
+        return Topic.query.filter(Topic.id.in_(descendant_topics_id_list))
 
     def add_parent_topic(self, parent_topic_id):
         """添加直接父话题"""
