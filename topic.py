@@ -348,7 +348,12 @@ class Topic(db.Model):
 
     @staticmethod
     def find_all_paths(graph, start, end, path=[]):
-        """获取图中节点A到节点B的所有路径"""
+        """获取图中节点A到节点B的所有路径
+
+        见：
+        https://www.python.org/doc/essays/graphs/
+        http://devres.zoomquiet.io/data/20071011232111/index.html
+        """
         path = path + [start]
         if start == end:
             return [path]
