@@ -372,7 +372,12 @@ class Topic(db.Model):
 
 
 class TopicClosure(db.Model):
-    """话题的closure table"""
+    """话题的closure table
+
+    见：
+    https://www.percona.com/blog/2011/02/14/moving-subtrees-in-closure-table/
+    《SQL反模式》http://book.douban.com/subject/6800774/
+    """
     __bind_key__ = 'dc'
     id = db.Column(db.Integer, primary_key=True)
     from_merge = db.Column(db.Boolean, default=False)
