@@ -218,14 +218,19 @@ class Topic(db.Model):
             QuestionTopic.topic_id == self.id)))
 
     @property
-    def parent_topics(self):
-        """直接父话题"""
+    def parent_topics_id_list(self):
+        """直接父话题id列表"""
         parent_topics_id_list = db.session.query(TopicClosure.ancestor_id). \
             filter(TopicClosure.descendant_id == self.id,
                    TopicClosure.ancestor_id != self.id,
                    TopicClosure.path_length == 1). \
             all()
-        parent_topics_id_list = [item.ancestor_id for item in parent_topics_id_list]
+        return _remove_repeats_from_list([item.ancestor_id for item in parent_topics_id_list])
+
+    @property
+    def parent_topics(self):
+        """直接父话题"""
+        parent_topics_id_list = self.parent_topics_id_list
         return Topic.query.filter(Topic.id.in_(parent_topics_id_list))
 
     @property
@@ -235,7 +240,8 @@ class Topic(db.Model):
             filter(TopicClosure.descendant_id == self.id,
                    TopicClosure.ancestor_id != self.id). \
             all()
-        return [item.ancestor_id for item in ancestor_topics_id_list]
+
+        return _remove_repeats_from_list([item.ancestor_id for item in ancestor_topics_id_list])
 
     @property
     def ancestor_topics(self):
@@ -250,7 +256,7 @@ class Topic(db.Model):
                    TopicClosure.descendant_id != self.id,
                    TopicClosure.path_length == 1). \
             all()
-        return [item.descendant_id for item in child_topics_id_list]
+        return _remove_repeats_from_list([item.descendant_id for item in child_topics_id_list])
 
     @property
     def child_topics(self):
@@ -263,7 +269,7 @@ class Topic(db.Model):
         descendant_topics_id_list = db.session.query(TopicClosure.descendant_id). \
             filter(TopicClosure.ancestor_id == self.id,
                    TopicClosure.descendant_id != self.id).all()
-        return [item.descendant_id for item in descendant_topics_id_list]
+        return _remove_repeats_from_list([item.descendant_id for item in descendant_topics_id_list])
 
     @property
     def descendant_topics(self):
@@ -286,54 +292,55 @@ class Topic(db.Model):
         """添加直接父话题"""
         for ancestor_topic in TopicClosure.query.filter(TopicClosure.descendant_id == parent_topic_id):
             for descendant_topic in TopicClosure.query.filter(TopicClosure.ancestor_id == self.id):
-                closure = TopicClosure.query. \
-                    filter(TopicClosure.ancestor_id == ancestor_topic.ancestor_id,
-                           TopicClosure.descendant_id == descendant_topic.descendant_id).first()
-                if not closure:
-                    new_closure = TopicClosure(ancestor_id=ancestor_topic.ancestor_id,
-                                               descendant_id=descendant_topic.descendant_id,
-                                               path_length=ancestor_topic.path_length + descendant_topic.path_length + 1)
-                    db.session.add(new_closure)
+                new_closure = TopicClosure(ancestor_id=ancestor_topic.ancestor_id,
+                                           descendant_id=descendant_topic.descendant_id,
+                                           path_length=ancestor_topic.path_length + descendant_topic.path_length + 1)
+                db.session.add(new_closure)
         db.session.commit()
 
     def remove_parent_topic(self, parent_topic_id):
         """删除直接父话题"""
+        print("%d-%d" % (self.id, parent_topic_id))
         for ancestor_topic in TopicClosure.query.filter(TopicClosure.descendant_id == parent_topic_id):
             for descendant_topic in TopicClosure.query.filter(TopicClosure.ancestor_id == self.id):
-                closure = TopicClosure.query.filter(TopicClosure.ancestor_id == ancestor_topic.ancestor_id,
-                                                    TopicClosure.descendant_id == descendant_topic.descendant_id)
-                map(db.session.delete, closure)
+                closure = TopicClosure.query. \
+                    filter(TopicClosure.ancestor_id == ancestor_topic.ancestor_id,
+                           TopicClosure.descendant_id == descendant_topic.descendant_id,
+                           TopicClosure.path_length == ancestor_topic.path_length + descendant_topic.path_length + 1). \
+                    first()
+                if closure:
+                    db.session.delete(closure)
         db.session.commit()
 
     def add_child_topic(self, child_topic_id, from_merge=False):
         """添加直接子话题"""
         for ancestor_topic in TopicClosure.query.filter(TopicClosure.descendant_id == self.id):
             for descendant_topic in TopicClosure.query.filter(TopicClosure.ancestor_id == child_topic_id):
-                closure = TopicClosure.query. \
-                    filter(TopicClosure.ancestor_id == ancestor_topic.ancestor_id,
-                           TopicClosure.descendant_id == descendant_topic.descendant_id).first()
-                if not closure:
-                    new_closure = TopicClosure(ancestor_id=ancestor_topic.ancestor_id,
-                                               descendant_id=descendant_topic.descendant_id,
-                                               path_length=ancestor_topic.path_length + descendant_topic.path_length + 1,
-                                               from_merge=from_merge)
-                    db.session.add(new_closure)
+                new_closure = TopicClosure(ancestor_id=ancestor_topic.ancestor_id,
+                                           descendant_id=descendant_topic.descendant_id,
+                                           path_length=ancestor_topic.path_length + descendant_topic.path_length + 1,
+                                           from_merge=from_merge)
+                db.session.add(new_closure)
         db.session.commit()
 
     def remove_child_topic(self, child_topic_id, from_merge=False):
         """删除直接子话题"""
         for ancestor_topic in TopicClosure.query.filter(TopicClosure.descendant_id == self.id):
             for descendant_topic in TopicClosure.query.filter(TopicClosure.ancestor_id == child_topic_id):
-                closure = TopicClosure.query.filter(TopicClosure.ancestor_id == ancestor_topic.ancestor_id,
-                                                    TopicClosure.descendant_id == descendant_topic.descendant_id)
+                closure = TopicClosure.query. \
+                    filter(TopicClosure.ancestor_id == ancestor_topic.ancestor_id,
+                           TopicClosure.descendant_id == descendant_topic.descendant_id,
+                           TopicClosure.path_length == ancestor_topic.path_length + descendant_topic.path_length + 1)
                 if from_merge:
                     closure = closure.filter(TopicClosure.from_merge)
-                map(db.session.delete, closure)
+                closure = closure.first()
+                if closure:
+                    db.session.delete(closure)
         db.session.commit()
 
     @staticmethod
     def find_min_path(topic_id_a, topic_id_b):
-        """寻找话题之间的最短路径"""
+        """寻找话题之间的最短路径长度"""
         path = db.session.query(db.func.min(TopicClosure.path_length).label("min_path")).filter(db.or_(
             db.and_(TopicClosure.ancestor_id == topic_id_a, TopicClosure.descendant_id == topic_id_b),
             db.and_(TopicClosure.descendant_id == topic_id_a, TopicClosure.ancestor_id == topic_id_b))).first()
@@ -591,3 +598,8 @@ class RelevantTopic(db.Model):
 def _intersect_list(a, b):
     """求列表的并"""
     return list(set(a).intersection(b))
+
+
+def _remove_repeats_from_list(l):
+    """去除话题中的重复元素"""
+    return list(set(l))
