@@ -89,6 +89,12 @@ class Answer(db.Model):
         return delete_object_from_es('answer', self.id)
 
     @property
+    def draft(self):
+        """草稿"""
+        return AnswerDraft.query.filter(AnswerDraft.user_id == self.user_id,
+                                        AnswerDraft.question_id == self.question_id).first()
+
+    @property
     def qrcode_url(self):
         """二维码图片地址"""
         return "%s/%s" % (db.config.get('CDN_HOST'), self.qrcode)
