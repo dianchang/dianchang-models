@@ -324,11 +324,23 @@ class UserFeed(db.Model):
     @staticmethod
     def follow_topic(user, topic):
         """添加关注话题feed"""
-        user_feed = user.feeds.filter(UserFeed.topic_id == topic.id).first()
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_TOPIC,
+                                      UserFeed.topic_id == topic.id).first()
         if user_feed:
             user_feed.created_at = datetime.now()
         else:
             user_feed = UserFeed(kind=USER_FEED_KIND.FOLLOW_TOPIC, user_id=user.id, topic_id=topic.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def follow_user(follower, following):
+        """添加关注用户feed"""
+        user_feed = follower.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_USER,
+                                          UserFeed.following_id == following.id).first()
+        if user_feed:
+            user_feed.created_at = datetime.now()
+        else:
+            user_feed = UserFeed(kind=USER_FEED_KIND.FOLLOW_USER, user_id=follower.id, following_id=following.id)
         db.session.add(user_feed)
 
 
