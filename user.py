@@ -606,6 +606,44 @@ class ComposeFeed(db.Model):
     invitation_id = db.Column(db.Integer, db.ForeignKey('invite_answer.id'))
     invitation = db.relationship('InviteAnswer')
 
+    @staticmethod
+    def invite_to_answer(user, question, invitation):
+        """邀请回答feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.kind == COMPOSE_FEED_KIND.INVITE_TO_ANSWER,
+                                                 ComposeFeed.question_id == question.id,
+                                                 ComposeFeed.invitation_id == invitation.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.INVITE_TO_ANSWER, user_id=user.id,
+                                       question_id=question.id, invitation_id=invitation.id)
+            db.session.add(compose_feed)
+
+    @staticmethod
+    def waiting_for_answer_question_from_expert_topic(user, question):
+        """擅长话题下的待回答问题feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.question_id == question.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.WAITING_FOR_ANSWER_QUESTION_FROM_EXPERT_TOPIC,
+                                       user_id=user.id, question_id=question.id)
+            db.session.add(compose_feed)
+
+    @staticmethod
+    def waiting_for_answer_question_from_all(user, question):
+        """全站热门的待回答问题feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.question_id == question.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.WAITING_FOR_ANSWER_QUESTION_FROM_ALL,
+                                       user_id=user.id, question_id=question.id)
+            db.session.add(compose_feed)
+
+    @staticmethod
+    def waiting_for_answer_question_from_answered_topic(user, question):
+        """我没有写进擅长话题，但我之前有过回答的话题下的热门待回答问题feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.question_id == question.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.WAITING_FOR_ANSWER_QUESTION_FROM_ANSWERED_TOPIC,
+                                       user_id=user.id, question_id=question.id)
+            db.session.add(compose_feed)
+
 
 class BlockUser(db.Model):
     """屏蔽用户"""
