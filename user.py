@@ -323,7 +323,7 @@ class UserFeed(db.Model):
 
     @staticmethod
     def follow_topic(user, topic):
-        """添加关注话题feed"""
+        """关注话题feed"""
         user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_TOPIC,
                                       UserFeed.topic_id == topic.id).first()
         if user_feed:
@@ -334,13 +334,53 @@ class UserFeed(db.Model):
 
     @staticmethod
     def follow_user(follower, following):
-        """添加关注用户feed"""
+        """关注用户feed"""
         user_feed = follower.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_USER,
                                           UserFeed.following_id == following.id).first()
         if user_feed:
             user_feed.created_at = datetime.now()
         else:
             user_feed = UserFeed(kind=USER_FEED_KIND.FOLLOW_USER, user_id=follower.id, following_id=following.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def follow_question(user, question):
+        """关注问题feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_QUESTION,
+                                      UserFeed.question_id == question.id).first()
+        if user_feed:
+            user_feed.created_at = datetime.now()
+        else:
+            user_feed = UserFeed(kind=USER_FEED_KIND.FOLLOW_QUESTION, user_id=user.id, question_id=question.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def upvote_answer(user, answer):
+        """赞同回答"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.UPVOTE_ANSWER,
+                                      UserFeed.answer_id == answer.id)
+        if user_feed:
+            user_feed.created_at = datetime.now()
+        else:
+            user_feed = UserFeed(kind=USER_FEED_KIND.UPVOTE_ANSWER, user_id=user.id, answer_id=answer.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def ask_question(user, question):
+        """提问feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.ASK_QUESTION,
+                                      UserFeed.question_id == question.id).first()
+        if not user_feed:
+            user_feed = UserFeed(kind=USER_FEED_KIND.ASK_QUESTION, user_id=user.id, question_id=question.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def answer_question(user, answer):
+        """回答feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.ANSWER_QUESTION,
+                                      UserFeed.answer_id == answer.id).first()
+        if not user_feed:
+            user_feed = UserFeed(kind=USER_FEED_KIND.ANSWER_QUESTION, user_id=user.id, answer_id=answer.id)
         db.session.add(user_feed)
 
 
