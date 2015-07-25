@@ -439,6 +439,7 @@ class Notification(db.Model):
 
     # 消息发起者，为用户 id 的列表
     senders_list = db.Column(db.Text)
+    merged = db.Column(db.Boolean, default=False)  # 是否为合并过的消息
 
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     sender = db.relationship('User', foreign_keys=[sender_id])
