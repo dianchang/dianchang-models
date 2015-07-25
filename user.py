@@ -511,6 +511,50 @@ class HomeFeed(db.Model):
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'))
     answer = db.relationship('Answer')
 
+    @staticmethod
+    def following_upvote_answer(user, sender, answer):
+        """关注的人赞同回答feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_UPVOTE_ANSWER,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.answer_id == answer.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_UPVOTE_ANSWER,
+                                 user_id=user.id, sender_id=sender.id, answer_id=answer.id)
+            db.session.add(home_feed)
+
+    @staticmethod
+    def following_ask_question(user, sender, question):
+        """关注的人提出了问题feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_ASK_QUESTION,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.question_id == question.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_ASK_QUESTION,
+                                 user_id=user.id, sender_id=sender.id, question_id=question.id)
+            db.session.add(home_feed)
+
+    @staticmethod
+    def following_answer_question(user, sender, answer):
+        """关注的人回答问题feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_ANSWER_QUESTION,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.answer_id == answer.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_ANSWER_QUESTION,
+                                 user_id=user.id, sender_id=sender.id, answer_id=answer.id)
+            db.session.add(home_feed)
+
+    @staticmethod
+    def following_follow_question(user, sender, question):
+        """关注的人关注了问题feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_FOLLOW_QUESTION,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.question_id == question.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_FOLLOW_QUESTION,
+                                 user_id=user.id, sender_id=sender.id, question_id=question.id)
+            db.session.add(home_feed)
+
 
 class HomeFeedBackup(db.Model):
     """首页 FEED 备份，用于当新用户注册并关注用户后，为其首页 FEED 填充内容"""
