@@ -283,7 +283,10 @@ class InvitationCode(db.Model):
 
 
 class USER_FEED_KIND(object):
-    """用户feed类型"""
+    """用户feed类型
+
+    当出现重复行为时（3-6条），仅更新创建时间。
+    """
     ASK_QUESTION = "gN02m2F"  # 提问
     ANSWER_QUESTION = "J8AbTDT"  # 回答问题
     UPVOTE_ANSWER = "F9FqDKa"  # 赞同回答
@@ -321,10 +324,10 @@ class UserFeed(db.Model):
 
 class NOTIFICATION_KIND(object):
     """用户通知子类型"""
-    # 用户类消息
+    # 用户类通知
     FOLLOW_ME = "nK8BQ99"  # 关注了我
 
-    # 感谢类消息
+    # 感谢类通知
     UPVOTE_ANSWER = "Vu69o4V"  # 赞同了我的回答
     THANK_ANSWER = "gIWr7dg"  # 感谢了我的回答
     LIKE_ANSWER_COMMENT = "1oY78lq"  # 赞了我的评论
@@ -471,8 +474,8 @@ class COMPOSE_FEED_KIND(object):
     """撰写feed类型"""
     INVITE_TO_ANSWER = "kdcKRfi"  # 别人邀请我回答的问题
     WAITING_FOR_ANSWER_QUESTION_FROM_EXPERT_TOPIC = "v0KJCX3"  # 我擅长的话题下的待回答问题
-    WAITING_FOR_ANSWER_QUESTION_FROM_ALL = "4Q8wfm9"  # 全站热门的待回答问题
-    WAITING_FOR_ANSWER_QUESTION_FROM_ANSWERD_TOPIC = "JlPzjXf"  # 我没有写进擅长话题，但我之前有过回答的话题下的热门待回答问题
+    WAITING_FOR_ANSWER_QUESTION_FROM_ALL = "4Q8wfm9"  # 全站热门的待回答问题（偶尔）
+    WAITING_FOR_ANSWER_QUESTION_FROM_ANSWERED_TOPIC = "JlPzjXf"  # 我没有写进擅长话题，但我之前有过回答的话题下的热门待回答问题
 
 
 class ComposeFeed(db.Model):
