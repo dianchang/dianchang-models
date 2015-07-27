@@ -476,6 +476,122 @@ class Notification(db.Model):
         senders_id_list = json.loads(self.senders_list)
         return User.query.filter(User.id.in_(senders_id_list))
 
+    @staticmethod
+    def follow_me(follower, following):
+        """关注了我NOTI"""
+        noti = following.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.FOLLOW_ME,
+            Notification.sender_id == follower.id).first()
+        if not noti:
+            noti = Notification(kind=NOTIFICATION_KIND.FOLLOW_ME, sender_id=follower.id)
+            following.notifications.append(noti)
+            db.session.add(following)
+
+    @staticmethod
+    def upvote_answer(user, answer):
+        """赞同回答NOTI"""
+        noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.UPVOTE_ANSWER,
+            Notification.sender_id == user.id,
+            ~Notification.merged,
+            Notification.answer_id == answer.id).first()
+        if noti:
+            return
+        noti = Notification(kind=NOTIFICATION_KIND.UPVOTE_ANSWER, sender_id=user.id, answer_id=answer.id,
+                            user_id=answer.user.id)
+        db.session.add(noti)
+
+        # 合并NOTI
+        merged_noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.UPVOTE_ANSWER,
+            Notification.unread,
+            Notification.answer_id == answer.id,
+            Notification.created_at_date == date.today()).first()
+        if merged_noti:
+            merged_noti.add_sender(user.id)
+            db.session.add(merged_noti)
+        else:
+            merged_noti = Notification(kind=NOTIFICATION_KIND.UPVOTE_ANSWER, senders_list=json.dumps([user.id]),
+                                       answer_id=answer.id, merged=True, user_id=answer.user.id)
+            db.session.add(merged_noti)
+
+    @staticmethod
+    def thank_answer(user, answer):
+        """感谢回答NOTI"""
+        noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.THANK_ANSWER,
+            Notification.sender_id == user.id,
+            ~Notification.merged,
+            Notification.answer_id == answer.id).first()
+        if noti:
+            return
+        noti = Notification(kind=NOTIFICATION_KIND.THANK_ANSWER, sender_id=user.id, answer_id=answer.id,
+                            user_id=answer.user.id)
+        db.session.add(noti)
+
+        # 合并NOTI
+        merged_noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.THANK_ANSWER,
+            Notification.unread,
+            Notification.answer_id == answer.id,
+            Notification.created_at_date == date.today()).first()
+        if merged_noti:
+            merged_noti.add_sender(user.id)
+            db.session.add(merged_noti)
+        else:
+            merged_noti = Notification(kind=NOTIFICATION_KIND.THANK_ANSWER, senders_list=json.dumps([user.id]),
+                                       answer_id=answer.id, merged=True, user_id=answer.user.id)
+            db.session.add(merged_noti)
+
+    @staticmethod
+    def like_answer_comment(user, answer_comment):
+        """赞回答评论NOTI"""
+        noti = answer_comment.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.LIKE_ANSWER_COMMENT,
+            Notification.sender_id == user.id,
+            ~Notification.merged,
+            Notification.answer_comment_id == answer_comment.id).first()
+        if noti:
+            return
+        noti = Notification(kind=NOTIFICATION_KIND.LIKE_ANSWER_COMMENT, sender_id=user.id,
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.user.id)
+        db.session.add(noti)
+
+        # 合并NOTI
+        merged_noti = answer_comment.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.LIKE_ANSWER_COMMENT,
+            Notification.unread,
+            Notification.answer_comment_id == answer_comment.id,
+            Notification.created_at_date == date.today()).first()
+        if merged_noti:
+            merged_noti.add_sender(user.id)
+            db.session.add(merged_noti)
+        else:
+            merged_noti = Notification(kind=NOTIFICATION_KIND.LIKE_ANSWER_COMMENT, senders_list=json.dumps([user.id]),
+                                       answer_comment_id=answer_comment.id, merged=True, user_id=answer_comment.user.id)
+            db.session.add(merged_noti)
+
+    @staticmethod
+    def answer_from_asked_question(user, answer):
+        """回答问题NOTI"""
+        noti = Notification(kind=NOTIFICATION_KIND.ANSWER_FROM_ASKED_QUESTION, sender_id=user.id,
+                            answer_id=answer.id, user_id=answer.question.user_id)
+        db.session.add(noti)
+
+    @staticmethod
+    def comment_answer(user, answer_comment):
+        """评论回答NOTI"""
+        noti = Notification(kind=NOTIFICATION_KIND.COMMENT_ANSWER, sender_id=user.id,
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.answer.user_id)
+        db.session.add(noti)
+
+    @staticmethod
+    def reply_answer_comment(user, answer_comment):
+        """回复评论NOTI"""
+        noti = Notification(kind=NOTIFICATION_KIND.REPLY_ANSWER_COMMENT, sender_id=user.id,
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.answer.user_id)
+        db.session.add(noti)
+
 
 class HOME_FEED_KIND(object):
     """首页feed类型"""
