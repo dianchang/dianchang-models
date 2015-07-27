@@ -356,9 +356,9 @@ class UserFeed(db.Model):
 
     @staticmethod
     def upvote_answer(user, answer):
-        """赞同回答"""
+        """赞同回答feed"""
         user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.UPVOTE_ANSWER,
-                                      UserFeed.answer_id == answer.id)
+                                      UserFeed.answer_id == answer.id).first()
         if user_feed:
             user_feed.created_at = datetime.now()
         else:
@@ -464,7 +464,7 @@ class Notification(db.Model):
 
     def add_sender(self, sender_id):
         """添加发起者"""
-        senders_list = set(json.loads(self.senders_list))
+        senders_list = set(json.loads(self.senders_list or "[]"))
         senders_list.add(sender_id)
         self.senders_list = json.dumps(list(senders_list))
 
@@ -505,6 +505,7 @@ class Notification(db.Model):
         merged_noti = answer.user.notifications.filter(
             Notification.kind == NOTIFICATION_KIND.UPVOTE_ANSWER,
             Notification.unread,
+            Notification.merged,
             Notification.answer_id == answer.id,
             Notification.created_at_date == date.today()).first()
         if merged_noti:
@@ -533,6 +534,7 @@ class Notification(db.Model):
         merged_noti = answer.user.notifications.filter(
             Notification.kind == NOTIFICATION_KIND.THANK_ANSWER,
             Notification.unread,
+            Notification.merged,
             Notification.answer_id == answer.id,
             Notification.created_at_date == date.today()).first()
         if merged_noti:
@@ -561,6 +563,7 @@ class Notification(db.Model):
         merged_noti = answer_comment.user.notifications.filter(
             Notification.kind == NOTIFICATION_KIND.LIKE_ANSWER_COMMENT,
             Notification.unread,
+            Notification.merged,
             Notification.answer_comment_id == answer_comment.id,
             Notification.created_at_date == date.today()).first()
         if merged_noti:
@@ -589,7 +592,7 @@ class Notification(db.Model):
     def reply_answer_comment(user, answer_comment):
         """回复评论NOTI"""
         noti = Notification(kind=NOTIFICATION_KIND.REPLY_ANSWER_COMMENT, sender_id=user.id,
-                            answer_comment_id=answer_comment.id, user_id=answer_comment.answer.user_id)
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.parent.user_id)
         db.session.add(noti)
 
 
