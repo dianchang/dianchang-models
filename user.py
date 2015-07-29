@@ -498,7 +498,7 @@ class Notification(db.Model):
         if noti:
             return
         noti = Notification(kind=NOTIFICATION_KIND.UPVOTE_ANSWER, sender_id=user.id, answer_id=answer.id,
-                            user_id=answer.user.id)
+                            user_id=answer.user.id, unread=False)
         db.session.add(noti)
 
         # 合并NOTI
@@ -527,7 +527,7 @@ class Notification(db.Model):
         if noti:
             return
         noti = Notification(kind=NOTIFICATION_KIND.THANK_ANSWER, sender_id=user.id, answer_id=answer.id,
-                            user_id=answer.user.id)
+                            user_id=answer.user.id, unread=False)
         db.session.add(noti)
 
         # 合并NOTI
@@ -556,7 +556,7 @@ class Notification(db.Model):
         if noti:
             return
         noti = Notification(kind=NOTIFICATION_KIND.LIKE_ANSWER_COMMENT, sender_id=user.id,
-                            answer_comment_id=answer_comment.id, user_id=answer_comment.user.id)
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.user.id, unread=False)
         db.session.add(noti)
 
         # 合并NOTI
