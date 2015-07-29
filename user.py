@@ -256,32 +256,6 @@ class FollowUser(db.Model):
         return '<FollowUser %s>' % self.id
 
 
-class InvitationCode(db.Model):
-    """邀请码"""
-    __bind_key__ = 'dc'
-    id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(200))
-    email = db.Column(db.String(100))
-    used = db.Column(db.Boolean, default=False)
-    sended_at = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.now)
-
-    # 当用户使用此邀请码注册后，填充user_id字段
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User',
-                           backref=db.backref('invitation_code',
-                                              cascade="all, delete, delete-orphan",
-                                              uselist=False),
-                           foreign_keys=[user_id])
-
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    sender = db.relationship('User',
-                             backref=db.backref('sended_invitation_codes',
-                                                cascade="all, delete, delete-orphan",
-                                                uselist=False),
-                             foreign_keys=[sender_id])
-
-
 class USER_FEED_KIND(object):
     """用户feed类型
 
@@ -763,35 +737,3 @@ class ComposeFeed(db.Model):
             compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.WAITING_FOR_ANSWER_QUESTION_FROM_ANSWERED_TOPIC,
                                        user_id=user.id, question_id=question.id)
             db.session.add(compose_feed)
-
-
-class BlockUser(db.Model):
-    """屏蔽用户"""
-    __bind_key__ = 'dc'
-    id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.now)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref=db.backref('blocks',
-                                                      lazy='dynamic',
-                                                      order_by='desc(BlockUser.created_at)'),
-                           foreign_keys=[user_id])
-
-    blocked_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    blocked_user = db.relationship('User', foreign_keys=[blocked_user_id])
-
-
-class ReportUser(db.Model):
-    """举报用户"""
-    __bind_key__ = 'dc'
-    id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.now)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref=db.backref('reported_users',
-                                                      lazy='dynamic',
-                                                      order_by='desc(ReportUser.created_at)'),
-                           foreign_keys=[user_id])
-
-    reported_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    reported_user = db.relationship('User', foreign_keys=[reported_user_id])
