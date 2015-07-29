@@ -256,34 +256,11 @@ class FollowUser(db.Model):
         return '<FollowUser %s>' % self.id
 
 
-class InvitationCode(db.Model):
-    """邀请码"""
-    __bind_key__ = 'dc'
-    id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(200))
-    email = db.Column(db.String(100))
-    used = db.Column(db.Boolean, default=False)
-    sended_at = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.now)
-
-    # 当用户使用此邀请码注册后，填充user_id字段
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User',
-                           backref=db.backref('invitation_code',
-                                              cascade="all, delete, delete-orphan",
-                                              uselist=False),
-                           foreign_keys=[user_id])
-
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    sender = db.relationship('User',
-                             backref=db.backref('sended_invitation_codes',
-                                                cascade="all, delete, delete-orphan",
-                                                uselist=False),
-                             foreign_keys=[sender_id])
-
-
 class USER_FEED_KIND(object):
-    """用户feed类型"""
+    """用户feed类型
+
+    当出现重复行为时（3-6条），仅更新创建时间。
+    """
     ASK_QUESTION = "gN02m2F"  # 提问
     ANSWER_QUESTION = "J8AbTDT"  # 回答问题
     UPVOTE_ANSWER = "F9FqDKa"  # 赞同回答
@@ -318,13 +295,75 @@ class UserFeed(db.Model):
     following_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     following = db.relationship('User', foreign_keys=[following_id])
 
+    @staticmethod
+    def follow_topic(user, topic):
+        """关注话题feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_TOPIC,
+                                      UserFeed.topic_id == topic.id).first()
+        if user_feed:
+            user_feed.created_at = datetime.now()
+        else:
+            user_feed = UserFeed(kind=USER_FEED_KIND.FOLLOW_TOPIC, user_id=user.id, topic_id=topic.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def follow_user(follower, following):
+        """关注用户feed"""
+        user_feed = follower.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_USER,
+                                          UserFeed.following_id == following.id).first()
+        if user_feed:
+            user_feed.created_at = datetime.now()
+        else:
+            user_feed = UserFeed(kind=USER_FEED_KIND.FOLLOW_USER, user_id=follower.id, following_id=following.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def follow_question(user, question):
+        """关注问题feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.FOLLOW_QUESTION,
+                                      UserFeed.question_id == question.id).first()
+        if user_feed:
+            user_feed.created_at = datetime.now()
+        else:
+            user_feed = UserFeed(kind=USER_FEED_KIND.FOLLOW_QUESTION, user_id=user.id, question_id=question.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def upvote_answer(user, answer):
+        """赞同回答feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.UPVOTE_ANSWER,
+                                      UserFeed.answer_id == answer.id).first()
+        if user_feed:
+            user_feed.created_at = datetime.now()
+        else:
+            user_feed = UserFeed(kind=USER_FEED_KIND.UPVOTE_ANSWER, user_id=user.id, answer_id=answer.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def ask_question(user, question):
+        """提问feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.ASK_QUESTION,
+                                      UserFeed.question_id == question.id).first()
+        if not user_feed:
+            user_feed = UserFeed(kind=USER_FEED_KIND.ASK_QUESTION, user_id=user.id, question_id=question.id)
+        db.session.add(user_feed)
+
+    @staticmethod
+    def answer_question(user, answer):
+        """回答feed"""
+        user_feed = user.feeds.filter(UserFeed.kind == USER_FEED_KIND.ANSWER_QUESTION,
+                                      UserFeed.answer_id == answer.id).first()
+        if not user_feed:
+            user_feed = UserFeed(kind=USER_FEED_KIND.ANSWER_QUESTION, user_id=user.id, answer_id=answer.id)
+        db.session.add(user_feed)
+
 
 class NOTIFICATION_KIND(object):
     """用户通知子类型"""
-    # 用户类消息
+    # 用户类通知
     FOLLOW_ME = "nK8BQ99"  # 关注了我
 
-    # 感谢类消息
+    # 感谢类通知
     UPVOTE_ANSWER = "Vu69o4V"  # 赞同了我的回答
     THANK_ANSWER = "gIWr7dg"  # 感谢了我的回答
     LIKE_ANSWER_COMMENT = "1oY78lq"  # 赞了我的评论
@@ -374,6 +413,7 @@ class Notification(db.Model):
 
     # 消息发起者，为用户 id 的列表
     senders_list = db.Column(db.Text)
+    merged = db.Column(db.Boolean, default=False)  # 是否为合并过的消息
 
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     sender = db.relationship('User', foreign_keys=[sender_id])
@@ -398,7 +438,7 @@ class Notification(db.Model):
 
     def add_sender(self, sender_id):
         """添加发起者"""
-        senders_list = set(json.loads(self.senders_list))
+        senders_list = set(json.loads(self.senders_list or "[]"))
         senders_list.add(sender_id)
         self.senders_list = json.dumps(list(senders_list))
 
@@ -410,6 +450,125 @@ class Notification(db.Model):
         senders_id_list = json.loads(self.senders_list)
         return User.query.filter(User.id.in_(senders_id_list))
 
+    @staticmethod
+    def follow_me(follower, following):
+        """关注了我NOTI"""
+        noti = following.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.FOLLOW_ME,
+            Notification.sender_id == follower.id).first()
+        if not noti:
+            noti = Notification(kind=NOTIFICATION_KIND.FOLLOW_ME, sender_id=follower.id)
+            following.notifications.append(noti)
+            db.session.add(following)
+
+    @staticmethod
+    def upvote_answer(user, answer):
+        """赞同回答NOTI"""
+        noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.UPVOTE_ANSWER,
+            Notification.sender_id == user.id,
+            ~Notification.merged,
+            Notification.answer_id == answer.id).first()
+        if noti:
+            return
+        noti = Notification(kind=NOTIFICATION_KIND.UPVOTE_ANSWER, sender_id=user.id, answer_id=answer.id,
+                            user_id=answer.user.id, unread=False)
+        db.session.add(noti)
+
+        # 合并NOTI
+        merged_noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.UPVOTE_ANSWER,
+            Notification.unread,
+            Notification.merged,
+            Notification.answer_id == answer.id,
+            Notification.created_at_date == date.today()).first()
+        if merged_noti:
+            merged_noti.add_sender(user.id)
+            db.session.add(merged_noti)
+        else:
+            merged_noti = Notification(kind=NOTIFICATION_KIND.UPVOTE_ANSWER, senders_list=json.dumps([user.id]),
+                                       answer_id=answer.id, merged=True, user_id=answer.user.id)
+            db.session.add(merged_noti)
+
+    @staticmethod
+    def thank_answer(user, answer):
+        """感谢回答NOTI"""
+        noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.THANK_ANSWER,
+            Notification.sender_id == user.id,
+            ~Notification.merged,
+            Notification.answer_id == answer.id).first()
+        if noti:
+            return
+        noti = Notification(kind=NOTIFICATION_KIND.THANK_ANSWER, sender_id=user.id, answer_id=answer.id,
+                            user_id=answer.user.id, unread=False)
+        db.session.add(noti)
+
+        # 合并NOTI
+        merged_noti = answer.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.THANK_ANSWER,
+            Notification.unread,
+            Notification.merged,
+            Notification.answer_id == answer.id,
+            Notification.created_at_date == date.today()).first()
+        if merged_noti:
+            merged_noti.add_sender(user.id)
+            db.session.add(merged_noti)
+        else:
+            merged_noti = Notification(kind=NOTIFICATION_KIND.THANK_ANSWER, senders_list=json.dumps([user.id]),
+                                       answer_id=answer.id, merged=True, user_id=answer.user.id)
+            db.session.add(merged_noti)
+
+    @staticmethod
+    def like_answer_comment(user, answer_comment):
+        """赞回答评论NOTI"""
+        noti = answer_comment.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.LIKE_ANSWER_COMMENT,
+            Notification.sender_id == user.id,
+            ~Notification.merged,
+            Notification.answer_comment_id == answer_comment.id).first()
+        if noti:
+            return
+        noti = Notification(kind=NOTIFICATION_KIND.LIKE_ANSWER_COMMENT, sender_id=user.id,
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.user.id, unread=False)
+        db.session.add(noti)
+
+        # 合并NOTI
+        merged_noti = answer_comment.user.notifications.filter(
+            Notification.kind == NOTIFICATION_KIND.LIKE_ANSWER_COMMENT,
+            Notification.unread,
+            Notification.merged,
+            Notification.answer_comment_id == answer_comment.id,
+            Notification.created_at_date == date.today()).first()
+        if merged_noti:
+            merged_noti.add_sender(user.id)
+            db.session.add(merged_noti)
+        else:
+            merged_noti = Notification(kind=NOTIFICATION_KIND.LIKE_ANSWER_COMMENT, senders_list=json.dumps([user.id]),
+                                       answer_comment_id=answer_comment.id, merged=True, user_id=answer_comment.user.id)
+            db.session.add(merged_noti)
+
+    @staticmethod
+    def answer_from_asked_question(user, answer):
+        """回答问题NOTI"""
+        noti = Notification(kind=NOTIFICATION_KIND.ANSWER_FROM_ASKED_QUESTION, sender_id=user.id,
+                            answer_id=answer.id, user_id=answer.question.user_id)
+        db.session.add(noti)
+
+    @staticmethod
+    def comment_answer(user, answer_comment):
+        """评论回答NOTI"""
+        noti = Notification(kind=NOTIFICATION_KIND.COMMENT_ANSWER, sender_id=user.id,
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.answer.user_id)
+        db.session.add(noti)
+
+    @staticmethod
+    def reply_answer_comment(user, answer_comment):
+        """回复评论NOTI"""
+        noti = Notification(kind=NOTIFICATION_KIND.REPLY_ANSWER_COMMENT, sender_id=user.id,
+                            answer_comment_id=answer_comment.id, user_id=answer_comment.parent.user_id)
+        db.session.add(noti)
+
 
 class HOME_FEED_KIND(object):
     """首页feed类型"""
@@ -417,9 +576,7 @@ class HOME_FEED_KIND(object):
     FOLLOWING_ASK_QUESTION = "groYn17"  # 我关注的人提出了某个问题
     FOLLOWING_ANSWER_QUESTION = "wFyvyTI"  # 我关注的人回答了某个问题
     FOLLOWING_FOLLOW_QUESTION = "i1VEDr8"  # 我关注的人关注了某个问题
-    WAITING_FOR_ANSWER_QUESTION_FROM_EXPERT_TOPIC = "6UEXA9U"  # 我擅长的话题的热门待回答问题
     FANTASTIC_ANSWER_FROM_FOLLOWED_TOPIC = "HVKEV0N"  # 关注的话题下的精彩回答
-    NEW_ANSWER_FROM_FOLLOWED_TOPIC = "VpuedTz"  # 关注的话题下的新人回答、刚出炉的回答
 
 
 class HomeFeed(db.Model):
@@ -448,6 +605,50 @@ class HomeFeed(db.Model):
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'))
     answer = db.relationship('Answer')
 
+    @staticmethod
+    def following_upvote_answer(user, sender, answer):
+        """关注的人赞同回答feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_UPVOTE_ANSWER,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.answer_id == answer.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_UPVOTE_ANSWER,
+                                 user_id=user.id, sender_id=sender.id, answer_id=answer.id)
+            db.session.add(home_feed)
+
+    @staticmethod
+    def following_ask_question(user, sender, question):
+        """关注的人提出了问题feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_ASK_QUESTION,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.question_id == question.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_ASK_QUESTION,
+                                 user_id=user.id, sender_id=sender.id, question_id=question.id)
+            db.session.add(home_feed)
+
+    @staticmethod
+    def following_answer_question(user, sender, answer):
+        """关注的人回答问题feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_ANSWER_QUESTION,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.answer_id == answer.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_ANSWER_QUESTION,
+                                 user_id=user.id, sender_id=sender.id, answer_id=answer.id)
+            db.session.add(home_feed)
+
+    @staticmethod
+    def following_follow_question(user, sender, question):
+        """关注的人关注了问题feed"""
+        home_feed = user.home_feeds.filter(HomeFeed.kind == HOME_FEED_KIND.FOLLOWING_FOLLOW_QUESTION,
+                                           HomeFeed.sender_id == sender.id,
+                                           HomeFeed.question_id == question.id).first()
+        if not home_feed:
+            home_feed = HomeFeed(kind=HOME_FEED_KIND.FOLLOWING_FOLLOW_QUESTION,
+                                 user_id=user.id, sender_id=sender.id, question_id=question.id)
+            db.session.add(home_feed)
+
 
 class HomeFeedBackup(db.Model):
     """首页 FEED 备份，用于当新用户注册并关注用户后，为其首页 FEED 填充内容"""
@@ -473,8 +674,8 @@ class COMPOSE_FEED_KIND(object):
     """撰写feed类型"""
     INVITE_TO_ANSWER = "kdcKRfi"  # 别人邀请我回答的问题
     WAITING_FOR_ANSWER_QUESTION_FROM_EXPERT_TOPIC = "v0KJCX3"  # 我擅长的话题下的待回答问题
-    WAITING_FOR_ANSWER_QUESTION_FROM_ALL = "4Q8wfm9"  # 全站热门的待回答问题
-    WAITING_FOR_ANSWER_QUESTION_FROM_ANSWERD_TOPIC = "JlPzjXf"  # 我没有写进擅长话题，但我之前有过回答的话题下的热门待回答问题
+    WAITING_FOR_ANSWER_QUESTION_FROM_ALL = "4Q8wfm9"  # 全站热门的待回答问题（偶尔）
+    WAITING_FOR_ANSWER_QUESTION_FROM_ANSWERED_TOPIC = "JlPzjXf"  # 我没有写进擅长话题，但我之前有过回答的话题下的热门待回答问题
 
 
 class ComposeFeed(db.Model):
@@ -499,34 +700,40 @@ class ComposeFeed(db.Model):
     invitation_id = db.Column(db.Integer, db.ForeignKey('invite_answer.id'))
     invitation = db.relationship('InviteAnswer')
 
+    @staticmethod
+    def invite_to_answer(user, question, invitation):
+        """邀请回答feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.kind == COMPOSE_FEED_KIND.INVITE_TO_ANSWER,
+                                                 ComposeFeed.question_id == question.id,
+                                                 ComposeFeed.invitation_id == invitation.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.INVITE_TO_ANSWER, user_id=user.id,
+                                       question_id=question.id, invitation_id=invitation.id)
+            db.session.add(compose_feed)
 
-class BlockUser(db.Model):
-    """屏蔽用户"""
-    __bind_key__ = 'dc'
-    id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    @staticmethod
+    def waiting_for_answer_question_from_expert_topic(user, question):
+        """擅长话题下的待回答问题feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.question_id == question.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.WAITING_FOR_ANSWER_QUESTION_FROM_EXPERT_TOPIC,
+                                       user_id=user.id, question_id=question.id)
+            db.session.add(compose_feed)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref=db.backref('blocks',
-                                                      lazy='dynamic',
-                                                      order_by='desc(BlockUser.created_at)'),
-                           foreign_keys=[user_id])
+    @staticmethod
+    def waiting_for_answer_question_from_all(user, question):
+        """全站热门的待回答问题feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.question_id == question.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.WAITING_FOR_ANSWER_QUESTION_FROM_ALL,
+                                       user_id=user.id, question_id=question.id)
+            db.session.add(compose_feed)
 
-    blocked_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    blocked_user = db.relationship('User', foreign_keys=[blocked_user_id])
-
-
-class ReportUser(db.Model):
-    """举报用户"""
-    __bind_key__ = 'dc'
-    id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.now)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref=db.backref('reported_users',
-                                                      lazy='dynamic',
-                                                      order_by='desc(ReportUser.created_at)'),
-                           foreign_keys=[user_id])
-
-    reported_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    reported_user = db.relationship('User', foreign_keys=[reported_user_id])
+    @staticmethod
+    def waiting_for_answer_question_from_answered_topic(user, question):
+        """我没有写进擅长话题，但我之前有过回答的话题下的热门待回答问题feed"""
+        compose_feed = user.compose_feeds.filter(ComposeFeed.question_id == question.id).first()
+        if not compose_feed:
+            compose_feed = ComposeFeed(kind=COMPOSE_FEED_KIND.WAITING_FOR_ANSWER_QUESTION_FROM_ANSWERED_TOPIC,
+                                       user_id=user.id, question_id=question.id)
+            db.session.add(compose_feed)
