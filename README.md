@@ -20,20 +20,20 @@ init_models(app)
 `app` should have configs as follows:
 
 ```py
-SQLALCHEMY_BINDS={
+SQLALCHEMY_BINDS = {
     'dc': "mysql+pymysql://root:@localhost/dianchang"
-},
-ROOT_TOPIC_ID=1,
-PRODUCT_TOPIC_ID=2,
-ORGANIZATION_TOPIC_ID=3,
-POSITION_TOPIC_ID=4,
-SKILL_TOPIC_ID=5
-PEOPLE_TOPIC_ID=6,
-OTHER_TOPIC_ID=7,
-NC_TOPIC_ID=8,
-CDN_HOST="http://xxx.qiniudn.com",
-DC_DOMAIN="http://127.0.0.1",
-ELASTICSEARCH_HOSTS=[{"host": "localhost", "port": 9200}]
+}
+ROOT_TOPIC_ID = 1
+PRODUCT_TOPIC_ID = 2
+ORGANIZATION_TOPIC_ID = 3
+POSITION_TOPIC_ID = 4
+SKILL_TOPIC_ID = 5
+PEOPLE_TOPIC_ID = 6
+OTHER_TOPIC_ID = 7
+NC_TOPIC_ID = 8
+CDN_HOST = "http://xxx.qiniudn.com"
+DC_DOMAIN = "http://127.0.0.1"
+ELASTICSEARCH_HOSTS = [{"host": "localhost", "port": 9200}]
 ```
 
 ##Pull latest codes
